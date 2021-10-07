@@ -2,3 +2,5 @@ fastAPI
 gunicorn
 uvicorn
 Jinja2
+pytest
+requests

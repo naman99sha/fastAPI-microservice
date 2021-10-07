@@ -1,3 +1,4 @@
 fastAPI
 gunicorn
 uvicorn
+Jinja2

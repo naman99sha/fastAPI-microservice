@@ -4,6 +4,19 @@ from fastapi.responses import HTMLResponse
 # For setting up templates in fastAPI
 from fastapi.templating import Jinja2Templates
 import pathlib  # You can also use OS library
+import os
+from pydantic import BaseSettings
+
+
+class Settings(BaseSettings):
+    debug: bool = False
+
+    class Config:
+        env_filed = ".env"
+
+
+settings = Settings()
+DEBUG = settings.debug
 
 app = FastAPI()
 

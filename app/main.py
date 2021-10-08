@@ -16,6 +16,7 @@ from pydantic import BaseSettings
 from functools import lru_cache
 import io
 import uuid
+from PIL import Image
 
 
 class Settings(BaseSettings):
@@ -37,6 +38,7 @@ app = FastAPI()
 
 BASE_DIR = pathlib.Path(__file__).parent
 UPLOAD_DIR = BASE_DIR / 'uploads'
+UPLOAD_DIR.mkdir(exist_ok=True)
 templates = Jinja2Templates(directory=str(BASE_DIR/'templates'))
 
 
@@ -55,10 +57,14 @@ async def img_echo_view(file: UploadFile = File(...), settings: Settings = Depen
     if not settings.echo_active:
         raise HTTPException(detail="Invalid Endpoint", status=400)
     bytes_str = io.BytesIO(await file.read())
+    try:
+        img = Image.open(bytes_str)
+    except:
+        # If the document uploaded is not an image
+        raise HTTPException(detail="Invalid Image", status=400)
     fname = pathlib.Path(file.filename)
     fext = fname.suffix  # .jpg , .txt
     dest = UPLOAD_DIR / f"{uuid.uuid1()}{fext}"
     # save the file uploaded
-    with open(str(dest), 'wb') as out:
-        out.write(bytes_str.read())
+    img.save(dest)
     return dest

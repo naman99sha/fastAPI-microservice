@@ -9,4 +9,5 @@ Some of the other concepts that are being used in this project are:
 - Docker
 - pre-commit
 <br>
-This microservice is provided to function as an OCR service for images.
+This microservice is provided to function as an OCR service for images. Link to the deployed project:
+- <a href="https://fastapi-ms-ocr.herokuapp.com/">https://fastapi-ms-ocr.herokuapp.com/</a>

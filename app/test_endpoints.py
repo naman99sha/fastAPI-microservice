@@ -14,25 +14,35 @@ def test_get_home():
     assert 'text/html' in response.headers["content-type"]
 
 
-def test_post_home():
-    response = client.post("/")
-    assert response.status_code == 200
-    assert 'application/json' in response.headers["content-type"]
+def test_prediction_upload():
+    saved_image_path = BASE_DIR / "images"
+    for path in saved_image_path.glob("*"):
+        try:
+            img = Image.open(path)
+        except:
+            img = None
+        response = client.post("/", files={"file": open(path, 'rb')})
+        if img is not None:
+            assert response.status_code == 200
+            data = response.json()
+            assert len(data.keys()) == 2
+        else:
+            assert response.status_code == 400
 
 
 def test_echo_upload():
     saved_image_path = BASE_DIR / "images"
     for path in saved_image_path.glob("*"):
         try:
-            image = Image.open(path)
+            img = Image.open(path)
         except:
-            image = None
-        response = client.get("/img-echo/", files={"file": open(path, 'rb')})
-        if image is not None:
+            img = None
+        response = client.post("/img-echo/", files={"file": open(path, 'rb')})
+        if img is not None:
             assert response.status_code == 200
             r_stream = io.BytesIO(response.content)
             echo_img = Image.open(r_stream)
-            diff = ImageChops.difference(echo_img, image).getbbox()
+            diff = ImageChops.difference(echo_img, img).getbbox()
             assert diff is None
         else:
             assert response.status_code == 400

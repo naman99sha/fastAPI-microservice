@@ -6,6 +6,7 @@ from fastapi import (
     File,
     UploadFile
 )
+import pytesseract
 # To return response in terms of HTML strings
 from fastapi.responses import HTMLResponse, FileResponse
 # For setting up templates in fastAPI
@@ -38,7 +39,6 @@ app = FastAPI()
 
 BASE_DIR = pathlib.Path(__file__).parent
 UPLOAD_DIR = BASE_DIR / 'uploads'
-UPLOAD_DIR.mkdir(exist_ok=True)
 templates = Jinja2Templates(directory=str(BASE_DIR/'templates'))
 
 
@@ -48,14 +48,26 @@ def home_view(request: Request, settings: Settings = Depends(get_settings)):
 
 
 @app.post("/")
-def home_detail_view():
-    return {"hello": "world"}
+async def prediction_view(file: UploadFile = File(...), settings: Settings = Depends(get_settings)):
+    if not settings.echo_active:
+        raise HTTPException(detail="Invalid Endpoint", status=400)
+    UPLOAD_DIR.mkdir(exist_ok=True)
+    bytes_str = io.BytesIO(await file.read())
+    try:
+        img = Image.open(bytes_str)
+    except:
+        # If the document uploaded is not an image
+        raise HTTPException(detail="Invalid Image", status=400)
+    pred = pytesseract.image_to_string(img)
+    predictions = [x for x in pred.split('\n')]
+    return {"results": predictions, 'original': pred}
 
 
 @app.post("/img-echo/", response_class=FileResponse)
 async def img_echo_view(file: UploadFile = File(...), settings: Settings = Depends(get_settings)):
     if not settings.echo_active:
         raise HTTPException(detail="Invalid Endpoint", status=400)
+    UPLOAD_DIR.mkdir(exist_ok=True)
     bytes_str = io.BytesIO(await file.read())
     try:
         img = Image.open(bytes_str)
